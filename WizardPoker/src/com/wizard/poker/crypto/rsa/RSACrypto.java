@@ -9,7 +9,7 @@ public class RSACrypto {
 		return plaintext.modPow(publicProfile.getExponent(),
 				publicProfile.getModulus());
 	}
-	
+
 	public static BigInteger encrypt(RSAPrivateProfile privateProfile,
 			BigInteger plaintext) {
 		return plaintext.modPow(privateProfile.getPublicExponent(),
