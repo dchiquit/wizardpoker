@@ -9,6 +9,9 @@ public class Crypto {
 	public static BigInteger encrypt(PublicProfile publicProfile, byte[] plaintext) {
 		return null;
 	}
+	public static BigInteger encrypt(PrivateProfile privateProfile, byte[] plaintext) {
+		return null;
+	}
 	public static BigInteger decrypt(PrivateProfile privateProfile, BigInteger ciphertext) {
 		return null;
 	}
