@@ -24,17 +24,23 @@ public class RSAPrivateProfile implements PrivateProfile {
 		this.modulus = modulus;
 	}
 
-//	public RSAPrivateProfile() throws NoSuchAlgorithmException, InvalidKeySpecException {
-//		KeyPairGenerator kpg;
-//		kpg = KeyPairGenerator.getInstance("RSA");
-//		kpg.initialize(2048);
-//		KeyPair kp = kpg.genKeyPair();
-//		KeyFactory fact = KeyFactory.getInstance("RSA");
-//		RSAPublicKeySpec pub = fact.getKeySpec(kp.getPublic(), RSAPublicKeySpec.class);
-//		RSAPublicKeySpec priv = fact.getKeySpec(kp.getPrivate(), RSAPublicKeySpec.class);
-//		
-//		//System.out.println(privateKey);
-//	}
+	public RSAPrivateProfile() throws NoSuchAlgorithmException,
+			InvalidKeySpecException {
+		KeyPairGenerator kpg;
+		kpg = KeyPairGenerator.getInstance("RSA");
+		kpg.initialize(2048);
+		KeyPair kp = kpg.genKeyPair();
+		KeyFactory fact = KeyFactory.getInstance("RSA");
+		RSAPublicKeySpec pub = fact.getKeySpec(kp.getPublic(),
+				RSAPublicKeySpec.class);
+		RSAPublicKeySpec priv = fact.getKeySpec(kp.getPrivate(),
+				RSAPublicKeySpec.class);
+		this.publicExponent = pub.getPublicExponent();
+		this.privateExponent = priv.getPublicExponent();
+		this.modulus = pub.getModulus();
+		System.out.println(pub.getPublicExponent() + "," + pub.getModulus());
+		System.out.println(pub.getPublicExponent() + "," + pub.getModulus());
+	}
 
 	public BigInteger getPublicExponent() {
 		return publicExponent;
