@@ -1,27 +1,58 @@
 package com.wizard.poker.crypto.rsa;
 
 import java.math.BigInteger;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
 
 import com.wizard.poker.profile.PrivateProfile;
 
 public class RSAPrivateProfile implements PrivateProfile {
 
-	private final BigInteger publicKey;
-	private final BigInteger privateKey;
-	
-	public RSAPrivateProfile(BigInteger publicKey, BigInteger privateKey) {
-		this.publicKey = publicKey;
-		this.privateKey = privateKey;
-	}
-	
-	@Override
-	public BigInteger getPublicKey() {
-		return publicKey;
+	private final BigInteger publicExponent;
+	private final BigInteger privateExponent;
+	private final BigInteger modulus;
+
+	public RSAPrivateProfile(BigInteger publicExponent,
+			BigInteger privateExponent, BigInteger modulus) {
+		this.publicExponent = publicExponent;
+		this.privateExponent = privateExponent;
+		this.modulus = modulus;
 	}
 
-	@Override
-	public BigInteger getPrivateKey() {
-		return privateKey;
+//	public RSAPrivateProfile() throws NoSuchAlgorithmException, InvalidKeySpecException {
+//		KeyPairGenerator kpg;
+//		kpg = KeyPairGenerator.getInstance("RSA");
+//		kpg.initialize(2048);
+//		KeyPair kp = kpg.genKeyPair();
+//		KeyFactory fact = KeyFactory.getInstance("RSA");
+//		RSAPublicKeySpec pub = fact.getKeySpec(kp.getPublic(), RSAPublicKeySpec.class);
+//		RSAPublicKeySpec priv = fact.getKeySpec(kp.getPrivate(), RSAPublicKeySpec.class);
+//		
+//		//System.out.println(privateKey);
+//	}
+
+	public BigInteger getPublicExponent() {
+		return publicExponent;
 	}
 
+	public BigInteger getPrivateExponent() {
+		return privateExponent;
+	}
+
+	public BigInteger getModulus() {
+		return modulus;
+	}
+
+	public BigInteger encrypt(BigInteger plaintext) {
+		return plaintext.modPow(publicExponent, modulus);
+	}
+
+	public BigInteger decrypt(BigInteger ciphertext) {
+		return ciphertext.modPow(privateExponent, modulus);
+	}
 }
