@@ -3,30 +3,37 @@ package test;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Random;
 
 import com.wizard.poker.crypto.Crypto;
 import com.wizard.poker.crypto.rsa.RSAPrivateProfile;
-
+import com.wizard.poker.profile.PrivateProfile;
 
 public class Test {
-	public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		RSAPrivateProfile a = new RSAPrivateProfile();
-//		RSAPrivateProfile b = new RSAPrivateProfile();
-		BigInteger message = new BigInteger("3");
-		System.out.println(message);
-		BigInteger tmp;
-		tmp = Crypto.encrypt(a, message);
-		System.out.println(tmp);
-		tmp = Crypto.decrypt(a, tmp);
-		System.out.println(tmp);
-		tmp = Crypto.decrypt(a, tmp);
-		System.out.println(tmp);
-		tmp = Crypto.encrypt(a, tmp);
-		System.out.println(tmp);
-		System.out.println(a.getPrivateExponent().multiply(a.getPublicExponent()).mod(a.getModulus()));
-		System.out.println();
-		System.out.println(message.modPow(a.getPublicExponent(), a.getModulus()));
-		System.out.println((message.modPow(a.getPublicExponent(), a.getModulus())).modPow(a.getPrivateExponent(), a.getModulus()));
-		System.out.println((message.modPow(a.getPrivateExponent(), a.getModulus())).modPow(a.getPublicExponent(), a.getModulus()));
+	public static void main(String[] args) throws NoSuchAlgorithmException,
+			InvalidKeySpecException {
+		PrivateProfile a = new RSAPrivateProfile();
+		PrivateProfile b = new RSAPrivateProfile();
+		Random r = new Random();
+		long j;
+		BigInteger m;
+		for (int i = 0; i < 100; i++) {
+			j = Math.abs(r.nextLong());
+			m = BigInteger.valueOf(j);
+			System.out.println("(" + i + ")\tTesting " + m);
+			BigInteger t1 = Crypto.decrypt(a, Crypto.encrypt(a, m));
+			System.out.println("\ta " + t1);
+			if (!t1.equals(m))
+				break;
+			BigInteger t2 = Crypto.decrypt(b, Crypto.encrypt(b, m));
+			System.out.println("\tb " + t2);
+			if (!t2.equals(m))
+				break;
+			BigInteger t3 = Crypto.decrypt(b,
+					Crypto.decrypt(a, Crypto.encrypt(b, Crypto.encrypt(a, m))));
+			System.out.println("\tabab " + t3);
+			if (!t3.equals(m))
+				break;
+		}
 	}
 }
