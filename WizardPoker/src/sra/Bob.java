@@ -1,67 +1,57 @@
 package sra;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.math.BigInteger;
-import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import networking.CardStream;
 import networking.Networking;
 
+import com.wizard.poker.api.Action;
+import com.wizard.poker.api.Actor;
+import com.wizard.poker.api.Card;
+import com.wizard.poker.api.Pool;
 import com.wizard.poker.crypto.Crypto;
 import com.wizard.poker.crypto.rsa.RSAPrivateProfile;
 
 public class Bob {
-	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		Random random = ThreadLocalRandom.current();
-		
-		int HANDSIZE = StandardPlayingCard.HANDSIZE;
-		
-		Socket socket = Networking.openSocket(args);
-		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+	public static void main(String[] args) throws IOException,
+			NoSuchAlgorithmException, InvalidKeySpecException {
+
+		CardStream cs = Networking.openSocket(args);
 		RSAPrivateProfile key = new RSAPrivateProfile();
-		BigInteger[] encryptedCards = new BigInteger[StandardPlayingCard.DECKSIZE];
-		for(int i = 0; i < StandardPlayingCard.DECKSIZE; i++) {
-			encryptedCards[i] = Crypto.encrypt(key, BigInteger.valueOf(i));
+		Pool deck = Pool.defaultDeck();
+		System.out.println(deck);
+
+		System.out.println("Encrypting cards...");
+		deck.shuffle(Actor.BOB, key, new Random());
+		System.out.println("Encrypted");
+		System.out.println(deck);
+		System.out.println("Sending encrypted cards...");
+
+		deck.writeAll(cs);
+		System.out.println("Sent");
+
+		System.out.println("Recieving Alice's hand...");
+
+		// See comments in Alice.java
+		// Pool aliceHand = deck.draw(Action.ENCRYPT, Actor.ALICE, 5, cs);
+		// System.out.println(aliceHand);
+		//
+		// aliceHand.decrypt(Actor.BOB, key);
+		// System.out.println("Decrypted: "+aliceHand);
+		// System.out.println(aliceHand.get(0).getTransactions());
+		//
+		// aliceHand.writeAll(cs);
+
+		for (int i = 0; i < 5; i++) {
+			Card c = deck.draw(Action.ENCRYPT, Actor.ALICE, cs);
+			c.localDecrypt(Actor.BOB, key);
+			cs.writeCard(c);
 		}
-		
-		for(int i = encryptedCards.length - 1; i > 0; i--) {
-			int index = random.nextInt(i+1);
-			BigInteger temp = encryptedCards[index];
-			encryptedCards[index] = encryptedCards[i];
-			encryptedCards[i] = temp;
-		}
-		out.writeObject(encryptedCards);
-		
-		Integer[] bobCardIds;
-		try {
-			bobCardIds = (Integer[]) in.readObject();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
-		BigInteger[] bobCards = new BigInteger[HANDSIZE];
-		for(int i = 0; i < HANDSIZE; i++) {
-			bobCards[i] = Crypto.decrypt(key, encryptedCards[bobCardIds[i]]);
-		}
-		
-		BigInteger[] aliceCards;
-		
-		try {
-			aliceCards = (BigInteger[]) in.readObject();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
-		
+
 	}
 }

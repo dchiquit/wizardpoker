@@ -1,74 +1,73 @@
 package sra;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.math.BigInteger;
-import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import networking.CardStream;
 import networking.Networking;
 
+import com.wizard.poker.api.Action;
+import com.wizard.poker.api.Actor;
+import com.wizard.poker.api.Card;
+import com.wizard.poker.api.Pool;
 import com.wizard.poker.crypto.Crypto;
 import com.wizard.poker.crypto.rsa.RSAPrivateProfile;
 
 public class Alice {
-	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		Random random = ThreadLocalRandom.current();
-		
-		Socket socket = Networking.openSocket(args);
-		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+	public static void main(String[] args) throws IOException,
+			NoSuchAlgorithmException, InvalidKeySpecException {
+
+		CardStream cs = Networking.openSocket(args);
 		RSAPrivateProfile key = new RSAPrivateProfile();
-		
-		int HANDSIZE = StandardPlayingCard.HANDSIZE;
-		
-		BigInteger[] encryptedCards;
-		
-		try {
-			encryptedCards = (BigInteger[]) in.readObject();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
+
+		Pool deck;
+
+		System.out.println("Reading all encrypted cards...");
+		deck = Pool.shuffleRemote(Actor.BOB, cs, 52);
+		System.out.println("Encrypted cards read");
+		System.out.println(deck);
+
+		Pool bobHand = new Pool();
+		for (int i = 0; i < 5; i++) {
+			bobHand.add(deck.get(i));
+		}
+		Pool aliceHand = new Pool();
+		for (int i = 5; i < 10; i++) {
+			aliceHand.add(deck.get(i));
 		}
 
-		
-		LinkedList<Integer> cardIds = new LinkedList<Integer>();
-		
-		BigInteger[] aliceCards = new BigInteger[HANDSIZE];
-		Integer[] aliceCardIds = new Integer[HANDSIZE];
-		BigInteger[] bobCards = new BigInteger[HANDSIZE];
-		Integer[] bobCardIds = new Integer[HANDSIZE];
-		
-		for(int i = 0; i < StandardPlayingCard.DECKSIZE; i++) {
-			cardIds.add(i);
+		aliceHand.encrypt(Actor.ALICE, key);
+		System.out.println("alice's hand: " + aliceHand);
+
+		// This code assumes that Alice passes Bob her hand, then Bob shuffles
+		// it.
+		// There's nothing wrong with that, but it's not necessary.
+		//
+		// System.out.println("Sending hands");
+		// aliceHand.writeAll(cs);
+		// Pool newAliceHand = aliceHand.draw(Action.DECRYPT, Actor.BOB, 5, cs);
+		// System.out.println("Recieved Alice's hand from Bob: "+newAliceHand);
+		// newAliceHand.decrypt(Actor.ALICE, key);
+		// System.out.println("Final hand:");
+		// System.out.println(newAliceHand);
+		// System.out.println("stack: "+newAliceHand.get(0).getTransactions());
+		// System.out.println("Resolvable: "+newAliceHand.get(0).canResolve());
+
+		// Here we do it card by card.
+		for (Card c : aliceHand) {
+			cs.writeCard(c);
+			cs.readCard(c, Action.DECRYPT, Actor.BOB);
 		}
-		
-		for(int iteration = 0; iteration < HANDSIZE; iteration++) {
-			int pos = random.nextInt(cardIds.size());
-			int id = cardIds.get(pos);
-			
-			bobCardIds[iteration] = id;
-			bobCards[iteration] = encryptedCards[id];
-			cardIds.remove(id);
-		}
-		
-		out.writeObject(bobCardIds);
-		
-		for(int iteration = 0; iteration < HANDSIZE; iteration++) {
-			int pos = random.nextInt(cardIds.size());
-			int id = cardIds.get(pos);
-			
-			aliceCardIds[iteration] = id;
-			aliceCards[iteration] = Crypto.encrypt(key, encryptedCards[id]);
-			cardIds.remove(id);
-		}
-		
-		out.writeObject(aliceCards);
+		System.out.println("Decrypted by Bob: " + aliceHand);
+		aliceHand.decrypt(Actor.ALICE, key);
+		System.out.println("Final hand:");
+		System.out.println(aliceHand);
+		System.out.println("stack: " + aliceHand.get(0).getTransactions());
+		System.out.println("Resolvable: " + aliceHand.get(0).canResolve());
 	}
 }

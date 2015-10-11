@@ -1,55 +1,37 @@
 package networking;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Networking {
 	public static final int PORT = 4344;
-	
-	public static Socket openSocket(String[] args) throws IOException {
-		if(args.length > 0) {
+
+	public static CardStream openSocket(String[] args) throws IOException {
+		if (args.length > 0) {
 			return startClient(args[0]);
-		}
-		else {
+		} else {
 			return startServer();
 		}
 	}
-	
-	public static Socket startServer() throws IOException {
+
+	public static CardStream startServer() throws IOException {
 		ServerSocket serverSocket = new ServerSocket(PORT);
 		Socket socket = serverSocket.accept();
 		serverSocket.close();
-		return socket;
+		ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+		ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+		return new CardStream(ois, oos);
 	}
-	
-	public static Socket startClient(String address) throws IOException {
+
+	public static CardStream startClient(String address) throws IOException {
 		InetAddress ipAddress = InetAddress.getByName(address);
-		return new Socket(ipAddress, PORT);
-	}
-	
-	public static void main(String[] args) {
-		try {
-			Socket socket = openSocket(args);
-			PrintWriter out = new PrintWriter(socket.getOutputStream(), 
-	                 true);
-			Reader in = new BufferedReader(new InputStreamReader(
-	                socket.getInputStream()));
-			out.write("Hello, Hello, Hello!");
-			out.flush();
-			int i = 0;
-			while(i != '!') {
-				i = in.read();
-				System.out.print((char)i);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
+		Socket socket = new Socket(ipAddress, PORT);
+		ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+		ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+		return new CardStream(ois, oos);
 	}
 }

@@ -1,4 +1,3 @@
-
 package test;
 
 import java.math.BigInteger;
@@ -6,6 +5,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Random;
 
+import com.wizard.poker.api.Action;
+import com.wizard.poker.api.Actor;
+import com.wizard.poker.api.Card;
 import com.wizard.poker.crypto.Crypto;
 import com.wizard.poker.crypto.rsa.RSAPrivateProfile;
 import com.wizard.poker.profile.PrivateProfile;
@@ -16,25 +18,20 @@ public class Test {
 		PrivateProfile a = new RSAPrivateProfile();
 		PrivateProfile b = new RSAPrivateProfile();
 		Random r = new Random();
-		long j;
-		BigInteger m;
-		for (int i = 0; i < 100; i++) {
-			j = Math.abs(r.nextLong());
-			m = BigInteger.valueOf(j);
-			System.out.println("(" + i + ")\tTesting " + m);
-			BigInteger t1 = Crypto.decrypt(a, Crypto.encrypt(a, m));
-			System.out.println("\ta " + t1);
-			if (!t1.equals(m))
-				break;
-			BigInteger t2 = Crypto.decrypt(b, Crypto.encrypt(b, m));
-			System.out.println("\tb " + t2);
-			if (!t2.equals(m))
-				break;
-			BigInteger t3 = Crypto.decrypt(b,
-					Crypto.decrypt(a, Crypto.encrypt(b, Crypto.encrypt(a, m))));
-			System.out.println("\tabab " + t3);
-			if (!t3.equals(m))
-				break;
-		}
+		BigInteger initial = BigInteger.valueOf(42);
+		System.out.println("initial "+Card.toString(initial));
+		Card c = new Card(Action.ENCRYPT, Actor.ALICE, Crypto.encrypt(a,
+				initial));
+		System.out.println(c);
+		c.localEncrypt(Actor.BOB, b);
+		System.out.println(c);
+		c.remoteDecrypt(Actor.ALICE, Crypto.decrypt(a, c.getValue()));
+		System.out.println(c);
+		c.localDecrypt(Actor.BOB, b);
+		System.out.println(c);
+		System.out.println(c.canResolve());
+		c.resolve();
+		System.out.println(c);
+		
 	}
 }

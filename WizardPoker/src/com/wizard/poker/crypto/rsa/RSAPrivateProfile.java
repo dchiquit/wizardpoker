@@ -38,25 +38,15 @@ public class RSAPrivateProfile implements PrivateProfile {
 		BigInteger nr = encryptionExponent;
 		while (!nr.equals(BigInteger.ZERO)) {
 			BigInteger quot = r.divide(nr);
-			System.out.println(r + "/" + nr + "=" + quot);
 			BigInteger nt_tmp = t.subtract(quot.multiply(nt));
 			t = nt;
 			nt = nt_tmp;
-			System.out.println("t nt " + t + " " + nt);
 
 			BigInteger nr_tmp = r.subtract(quot.multiply(nr));
 			r = nr;
 			nr = nr_tmp;
-			System.out.println("r nr " + r + " " + nr);
 		}
 		this.decryptionExponent = t;
-		System.out.println("1: "
-				+ encryptionExponent.multiply(decryptionExponent).mod(tot));
-		System.out.println("p*q: " + N);
-		System.out.println("totiont: " + tot);
-		System.out.println("e: " + encryptionExponent);
-		System.out.println("d: " + decryptionExponent);
-		System.out.println("ayy");
 	}
 
 	public BigInteger getPublicExponent() {
