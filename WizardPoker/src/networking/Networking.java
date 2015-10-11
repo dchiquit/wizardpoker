@@ -10,7 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Networking {
-	public static final int PORT = 4342;
+	public static final int PORT = 4344;
 	
 	public static Socket openSocket(String[] args) throws IOException {
 		if(args.length > 0) {
@@ -41,8 +41,11 @@ public class Networking {
 			Reader in = new BufferedReader(new InputStreamReader(
 	                socket.getInputStream()));
 			out.write("Hello, Hello, Hello!");
-			while(true) {
-				System.out.print(in.read());
+			out.flush();
+			int i = 0;
+			while(i != '!') {
+				i = in.read();
+				System.out.print((char)i);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
